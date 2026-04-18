@@ -1,0 +1,804 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import java.lang.String?>
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.ComboBox?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.ListView?>
+<?import javafx.scene.control.ProgressBar?>
+<?import javafx.scene.control.ScrollPane?>
+<?import javafx.scene.control.Slider?>
+<?import javafx.scene.control.TextArea?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.image.Image?>
+<?import javafx.scene.image.ImageView?>
+<?import javafx.scene.layout.BorderPane?>
+<?import javafx.scene.layout.ColumnConstraints?>
+<?import javafx.scene.layout.FlowPane?>
+<?import javafx.scene.layout.GridPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.Region?>
+<?import javafx.scene.layout.RowConstraints?>
+<?import javafx.scene.layout.StackPane?>
+<?import javafx.scene.layout.VBox?>
+
+<!-- Dashboard root shell -->
+<BorderPane xmlns="http://javafx.com/javafx"
+    xmlns:fx="http://javafx.com/fxml"
+    fx:controller="com.solacea.controller.DashboardController"
+    prefWidth="1100"
+    prefHeight="720"
+    styleClass="app-shell"
+    stylesheets="@/css/styles.css">
+
+    <!-- Left sidebar navigation -->
+    <left>
+        <!-- Sidebar: branding, nav buttons, and logout -->
+        <VBox prefWidth="220" spacing="10" styleClass="sidebar">
+            <VBox spacing="6" styleClass="sidebar-brand">
+                <ImageView fitWidth="150" preserveRatio="true" smooth="true">
+                    <Image url="@/images/Solacea_nlogo.png" />
+                </ImageView>
+                <Label text="Grow through what you feel." styleClass="sidebar-tagline" />
+            </VBox>
+
+            <Button fx:id="homeBtn" text="&#127968;  Dashboard" onAction="#handleHomeClick"
+                prefWidth="210" styleClass="nav-button" />
+            <Button fx:id="logMoodBtn" text="&#128221;  Log Mood" onAction="#handleLogMoodClick"
+                prefWidth="210" styleClass="nav-button" />
+            <Button fx:id="journalBtn" text="&#128214;  Journal" onAction="#handleJournalClick"
+                prefWidth="210" styleClass="nav-button" />
+            <Button fx:id="gardenBtn" text="&#127793;  Garden" onAction="#handleGardenClick"
+                prefWidth="210" styleClass="nav-button" />
+            <Button fx:id="historyBtn" text="&#128202;  History" onAction="#handleHistoryClick"
+                prefWidth="210" styleClass="nav-button" />
+
+            <Region VBox.vgrow="ALWAYS" />
+
+            <Button fx:id="settingsBtn" text="&#9881;  Settings" onAction="#handleSettingsClick"
+                prefWidth="210" styleClass="nav-button" />
+
+            <Button text="&#128682;  Logout" onAction="#handleLogout" prefWidth="150"
+                styleClass="logout-button">
+                <VBox.margin>
+                    <Insets left="18" bottom="14" />
+                </VBox.margin>
+            </Button>
+        </VBox>
+    </left>
+
+    <!-- Main content area -->
+    <center>
+        <StackPane styleClass="dashboard-surface">
+            <BorderPane.margin>
+                <Insets top="18" right="18" bottom="18" left="0" />
+            </BorderPane.margin>
+
+            <!-- Scrollable page container that hosts every view -->
+            <ScrollPane fx:id="mainScrollPane" fitToWidth="true" fitToHeight="true"
+                hbarPolicy="NEVER" vbarPolicy="AS_NEEDED" pannable="false" styleClass="page-scroll">
+                <content>
+                    <StackPane alignment="TOP_CENTER">
+
+                        <!-- Home view: summary cards, streak, and quick insights -->
+                        <VBox fx:id="homeView" spacing="18" visible="false" maxWidth="980"
+                            styleClass="dashboard-page">
+                            <Label fx:id="welcomeLabel" text="Hi there!" styleClass="page-title" />
+
+                            <VBox fx:id="wellbeingAlertBanner" spacing="10" visible="false"
+                                managed="false">
+                                <styleClass>
+                                    <String fx:value="card" />
+                                    <String fx:value="card-cream" />
+                                </styleClass>
+                                <HBox alignment="CENTER_LEFT" spacing="15">
+                                    <Label text="GENTLE CHECK-IN" styleClass="eyebrow" />
+                                    <Region HBox.hgrow="ALWAYS" />
+                                    <Button text="Dismiss" onAction="#dismissAlert"
+                                        styleClass="secondary-button" />
+                                </HBox>
+                                <Label
+                                    text="We noticed you've been feeling down for a few days. Remember to be kind to yourself. Would you like to try a guided reflection in your Journal to process these feelings?"
+                                    wrapText="true"
+                                    styleClass="page-subtitle" />
+                            </VBox>
+
+                            <VBox spacing="12">
+                                <styleClass>
+                                    <String fx:value="card" />
+                                    <String fx:value="card-purple" />
+                                    <String fx:value="card-contrast" />
+                                    <String fx:value="hero-band" />
+                                </styleClass>
+                                <Label text="TODAY'S GARDEN" styleClass="eyebrow" />
+                                <Label
+                                    text="Keep showing up for yourself. Small entries, steady care, and honest reflection all count."
+                                    wrapText="true"
+                                    style="-fx-font-size: 24px; -fx-font-weight: 700;" />
+                                <Label
+                                    text="Your dashboard turns mood logs and journal entries into a visible growth rhythm."
+                                    wrapText="true"
+                                    style="-fx-font-size: 13px; -fx-text-fill: rgba(255,255,255,0.72);" />
+                            </VBox>
+
+                            <FlowPane fx:id="homeTopFlow" hgap="18" vgap="18"
+                                styleClass="responsive-flow">
+                                <VBox minHeight="150" spacing="14" prefWidth="560" minWidth="280"
+                                    maxWidth="Infinity">
+                                    <styleClass>
+                                        <String fx:value="card" />
+                                        <String fx:value="card-lilac" />
+                                    </styleClass>
+                                    <Label text="RECENT INSIGHT" styleClass="eyebrow" />
+                                    <Label fx:id="insightLabel" wrapText="true"
+                                        style="-fx-text-fill: #592E83; -fx-font-size: 21px; -fx-font-weight: 700;" />
+                                    <Label
+                                        text="Patterns become clearer when the check-ins stay gentle and consistent."
+                                        wrapText="true" styleClass="page-subtitle" />
+                                </VBox>
+
+                                <FlowPane fx:id="homeStatusFlow" hgap="14" vgap="14"
+                                    prefWrapLength="260" prefWidth="290" minWidth="240"
+                                    maxWidth="Infinity">
+                                    <VBox fx:id="recoveryCard" spacing="10" minHeight="118"
+                                        prefWidth="250" minWidth="220" maxWidth="Infinity">
+                                        <styleClass>
+                                            <String fx:value="card" />
+                                            <String fx:value="card-cream" />
+                                        </styleClass>
+                                        <Label text="RECOVERY SCORE" styleClass="eyebrow" />
+                                        <HBox alignment="CENTER_LEFT" spacing="12">
+                                            <Label text="&#10084;"
+                                                style="-fx-font-size: 28px; -fx-text-fill: #7A9E7E;" />
+                                            <Label fx:id="recoveryScoreLabel" text="0%"
+                                                styleClass="metric-value" />
+                                        </HBox>
+                                        <Label
+                                            text="A simple pulse of how your recent consistency is trending."
+                                            wrapText="true" styleClass="metric-caption" />
+                                    </VBox>
+
+                                    <VBox fx:id="gardenStatusCard" spacing="10" minHeight="118"
+                                        prefWidth="250" minWidth="220" maxWidth="Infinity">
+                                        <styleClass>
+                                            <String fx:value="card" />
+                                            <String fx:value="card-cream" />
+                                        </styleClass>
+                                        <Label text="GARDEN STATUS" styleClass="eyebrow" />
+                                        <HBox alignment="CENTER_LEFT" spacing="12">
+                                            <Label text="&#127793;"
+                                                style="-fx-font-size: 28px; -fx-text-fill: #7A9E7E;" />
+                                            <VBox spacing="2">
+                                                <Label fx:id="gardenLevelLabel" text="Level 1"
+                                                    style="-fx-font-size: 28px; -fx-font-weight: 700; -fx-text-fill: #592E83;" />
+                                                <Label fx:id="gardenSubLabel"
+                                                    styleClass="metric-caption" />
+                                            </VBox>
+                                        </HBox>
+                                    </VBox>
+                                </FlowPane>
+                            </FlowPane>
+
+                            <FlowPane fx:id="homeBottomFlow" hgap="18" vgap="18"
+                                styleClass="responsive-flow">
+                                <VBox alignment="CENTER" prefWidth="250" minWidth="220" spacing="12">
+                                    <styleClass>
+                                        <String fx:value="card" />
+                                        <String fx:value="card-cream" />
+                                    </styleClass>
+                                    <Label text="DAILY STREAK" styleClass="eyebrow" />
+                                    <StackPane prefWidth="108" prefHeight="108" maxWidth="108"
+                                        maxHeight="108">
+                                        <Region styleClass="score-ring" />
+                                        <Region styleClass="score-ring-inner" />
+                                        <Label fx:id="homeStreakCountLabel" text="0"
+                                            style="-fx-font-size: 34px; -fx-font-weight: 700; -fx-text-fill: #592E83;" />
+                                    </StackPane>
+                                    <Label text="Days in a row." styleClass="metric-caption" />
+                                </VBox>
+
+                                <VBox spacing="10" prefWidth="560" minWidth="260">
+                                    <styleClass>
+                                        <String fx:value="card" />
+                                        <String fx:value="card-cream" />
+                                    </styleClass>
+                                    <Label text="LIFETIME STATS" styleClass="eyebrow" />
+                                    <HBox alignment="CENTER_LEFT" spacing="15"
+                                        styleClass="feature-card">
+                                        <Label text="&#11088;" style="-fx-font-size: 18px;" />
+                                        <Label text="Total XP"
+                                            style="-fx-font-size: 14px; -fx-font-weight: 700; -fx-text-fill: #6A515E;" />
+                                        <Region HBox.hgrow="ALWAYS" />
+                                        <Label fx:id="homeTotalXpStatLabel" text="0"
+                                            style="-fx-font-size: 24px; -fx-font-weight: 700; -fx-text-fill: #592E83;" />
+                                    </HBox>
+                                    <HBox alignment="CENTER_LEFT" spacing="15"
+                                        styleClass="feature-card">
+                                        <Label text="&#128522;" style="-fx-font-size: 18px;" />
+                                        <Label text="Moods Logged"
+                                            style="-fx-font-size: 14px; -fx-font-weight: 700; -fx-text-fill: #6A515E;" />
+                                        <Region HBox.hgrow="ALWAYS" />
+                                        <Label fx:id="homeTotalMoodsStatLabel" text="0"
+                                            style="-fx-font-size: 24px; -fx-font-weight: 700; -fx-text-fill: #592E83;" />
+                                    </HBox>
+                                    <HBox alignment="CENTER_LEFT" spacing="15"
+                                        styleClass="feature-card" style="-fx-border-width: 0;">
+                                        <Label text="&#128214;" style="-fx-font-size: 18px;" />
+                                        <Label text="Journals Logged"
+                                            style="-fx-font-size: 14px; -fx-font-weight: 700; -fx-text-fill: #6A515E;" />
+                                        <Region HBox.hgrow="ALWAYS" />
+                                        <Label fx:id="homeTotalJournalsStatLabel" text="0"
+                                            style="-fx-font-size: 24px; -fx-font-weight: 700; -fx-text-fill: #592E83;" />
+                                    </HBox>
+                                </VBox>
+                            </FlowPane>
+                        </VBox>
+
+                        <!-- Log Mood view: slider, trigger selector, and notes -->
+                        <VBox fx:id="logMoodView" spacing="16" visible="false" maxWidth="940"
+                            styleClass="dashboard-page">
+                            <Label text="LOG YOUR MOOD" styleClass="page-title" />
+                            <Label fx:id="currentDateLabel" styleClass="page-subtitle" />
+
+                            <VBox alignment="CENTER" spacing="12" maxWidth="Infinity">
+                                <styleClass>
+                                    <String fx:value="card" />
+                                    <String fx:value="card-lilac" />
+                                </styleClass>
+                                <Label text="How are you feeling today?" wrapText="true"
+                                    maxWidth="Infinity" styleClass="mood-question-label" />
+
+                                <HBox alignment="CENTER" spacing="10"
+                                    styleClass="mood-indicator-row">
+                                    <ImageView fx:id="moodFaceImageView" fitWidth="44"
+                                        fitHeight="44" preserveRatio="true" />
+                                    <Label fx:id="moodIndicatorLabel" text="Okay (5/10)"
+                                        styleClass="mood-indicator-label" />
+                                </HBox>
+
+                                <VBox fx:id="moodSliderPanel" spacing="12" prefWidth="540"
+                                    maxWidth="560" styleClass="mood-slider-panel">
+                                    <styleClass>
+                                        <String fx:value="card" />
+                                        <String fx:value="card-cream" />
+                                    </styleClass>
+                                    <VBox fx:id="moodSliderTrackBox" alignment="CENTER"
+                                        spacing="8" prefWidth="500" minWidth="300"
+                                        maxWidth="500">
+                                        <Slider fx:id="intensitySlider"
+                                            min="1"
+                                            max="10"
+                                            value="5"
+                                            prefWidth="500"
+                                            maxWidth="Infinity"
+                                            showTickLabels="false"
+                                            showTickMarks="false"
+                                            majorTickUnit="1"
+                                            snapToTicks="true"
+                                            blockIncrement="1"
+                                            styleClass="mood-slider" />
+
+                                        <HBox alignment="CENTER" spacing="0" prefWidth="500"
+                                            maxWidth="Infinity" styleClass="slider-scale-row">
+                                            <Label text="1" alignment="CENTER" maxWidth="Infinity"
+                                                HBox.hgrow="ALWAYS" />
+                                            <Label text="2" alignment="CENTER" maxWidth="Infinity"
+                                                HBox.hgrow="ALWAYS" />
+                                            <Label text="3" alignment="CENTER" maxWidth="Infinity"
+                                                HBox.hgrow="ALWAYS" />
+                                            <Label text="4" alignment="CENTER" maxWidth="Infinity"
+                                                HBox.hgrow="ALWAYS" />
+                                            <Label text="5" alignment="CENTER" maxWidth="Infinity"
+                                                HBox.hgrow="ALWAYS" />
+                                            <Label text="6" alignment="CENTER" maxWidth="Infinity"
+                                                HBox.hgrow="ALWAYS" />
+                                            <Label text="7" alignment="CENTER" maxWidth="Infinity"
+                                                HBox.hgrow="ALWAYS" />
+                                            <Label text="8" alignment="CENTER" maxWidth="Infinity"
+                                                HBox.hgrow="ALWAYS" />
+                                            <Label text="9" alignment="CENTER" maxWidth="Infinity"
+                                                HBox.hgrow="ALWAYS" />
+                                            <Label text="10" alignment="CENTER" maxWidth="Infinity"
+                                                HBox.hgrow="ALWAYS" />
+                                        </HBox>
+                                    </VBox>
+                                </VBox>
+
+                                <FlowPane alignment="CENTER" hgap="12" vgap="10"
+                                    styleClass="mood-chip-row">
+                                    <VBox alignment="CENTER" spacing="6" styleClass="mood-chip">
+                                        <ImageView fitWidth="40" fitHeight="40" preserveRatio="true"
+                                            smooth="true">
+                                            <Image url="@/images/Awful.png" />
+                                        </ImageView>
+                                        <Label text="Awful" styleClass="mood-chip-label"
+                                            style="-fx-text-fill: #D57F7E;" />
+                                    </VBox>
+                                    <VBox alignment="CENTER" spacing="6" styleClass="mood-chip">
+                                        <ImageView fitWidth="40" fitHeight="40" preserveRatio="true"
+                                            smooth="true">
+                                            <Image url="@/images/Bad.png" />
+                                        </ImageView>
+                                        <Label text="Bad" styleClass="mood-chip-label"
+                                            style="-fx-text-fill: #EEAB7B;" />
+                                    </VBox>
+                                    <VBox alignment="CENTER" spacing="6" styleClass="mood-chip">
+                                        <ImageView fitWidth="40" fitHeight="40" preserveRatio="true"
+                                            smooth="true">
+                                            <Image url="@/images/Okay.png" />
+                                        </ImageView>
+                                        <Label text="Okay" styleClass="mood-chip-label"
+                                            style="-fx-text-fill: #C1AEDB;" />
+                                    </VBox>
+                                    <VBox alignment="CENTER" spacing="6" styleClass="mood-chip">
+                                        <ImageView fitWidth="40" fitHeight="40" preserveRatio="true"
+                                            smooth="true">
+                                            <Image url="@/images/Good.png" />
+                                        </ImageView>
+                                        <Label text="Good" styleClass="mood-chip-label"
+                                            style="-fx-text-fill: #7A9E7E;" />
+                                    </VBox>
+                                    <VBox alignment="CENTER" spacing="6" styleClass="mood-chip">
+                                        <ImageView fitWidth="40" fitHeight="40" preserveRatio="true"
+                                            smooth="true">
+                                            <Image url="@/images/Great.png" />
+                                        </ImageView>
+                                        <Label text="Great" styleClass="mood-chip-label"
+                                            style="-fx-text-fill: #592E83;" />
+                                    </VBox>
+                                </FlowPane>
+                            </VBox>
+
+                            <VBox spacing="16">
+                                <styleClass>
+                                    <String fx:value="card" />
+                                    <String fx:value="card-cream" />
+                                </styleClass>
+                                <VBox spacing="8">
+                                    <Label text="What triggered this feeling?"
+                                        style="-fx-font-size: 14px; -fx-font-weight: 700; -fx-text-fill: #592E83;" />
+                                    <ComboBox fx:id="triggerComboBox"
+                                        promptText="Select a trigger..." prefWidth="320"
+                                        maxWidth="Infinity" />
+                                </VBox>
+                                <VBox spacing="8">
+                                    <Label text="Add notes"
+                                        style="-fx-font-size: 14px; -fx-font-weight: 700; -fx-text-fill: #592E83;" />
+                                    <TextArea fx:id="notesArea"
+                                        promptText="Write your thoughts here..." wrapText="true"
+                                        prefRowCount="3" />
+                                </VBox>
+                                <Label fx:id="dashboardStatusLabel" styleClass="status-label" />
+                                <HBox alignment="CENTER">
+                                    <Button text="SAVE ENTRY" onAction="#handleSaveEntry"
+                                        prefWidth="220" styleClass="primary-button" />
+                                </HBox>
+                            </VBox>
+                        </VBox>
+
+                        <!-- Journal view: prompt, writing area, and progress cards -->
+                        <VBox fx:id="journalView" spacing="14" visible="false" maxWidth="980"
+                            styleClass="dashboard-page">
+                            <Label text="REFLECTION JOURNAL" styleClass="page-title" />
+
+                            <VBox alignment="CENTER" spacing="12">
+                                <styleClass>
+                                    <String fx:value="card" />
+                                    <String fx:value="card-lilac" />
+                                </styleClass>
+                                <Label text="TODAY'S PROMPT" styleClass="eyebrow" />
+                                <Label fx:id="journalPromptLabel" wrapText="true"
+                                    textAlignment="CENTER"
+                                    style="-fx-font-size: 20px; -fx-font-weight: 700; -fx-text-fill: #592E83; -fx-font-style: italic;" />
+                            </VBox>
+
+                            <VBox spacing="14">
+                                <styleClass>
+                                    <String fx:value="card" />
+                                    <String fx:value="card-cream" />
+                                </styleClass>
+                                <TextArea fx:id="journalArea"
+                                    promptText="Write your thoughts here..."
+                                    wrapText="true"
+                                    prefRowCount="7"
+                                    minHeight="220"
+                                    maxHeight="300" />
+                                <FlowPane fx:id="journalStatsFlow" hgap="14" vgap="12"
+                                    prefWrapLength="840" styleClass="responsive-flow">
+                                    <VBox spacing="6" prefWidth="260" minWidth="220"
+                                        maxWidth="Infinity" styleClass="journal-stat-card">
+                                        <Label text="JOURNAL LOGS TRACKER" styleClass="eyebrow" />
+                                        <Label fx:id="journalLogsTrackerLabel" text="0 entries"
+                                            styleClass="journal-stat-value" />
+                                        <Label text="Total entries you've logged so far."
+                                            wrapText="true" styleClass="metric-caption" />
+                                    </VBox>
+                                    <VBox spacing="6" prefWidth="260" minWidth="220"
+                                        maxWidth="Infinity" styleClass="journal-stat-card">
+                                        <Label text="RECOVERY SCORE" styleClass="eyebrow" />
+                                        <Label fx:id="journalRecoveryScoreLabel" text="0%"
+                                            styleClass="journal-stat-value" />
+                                        <Label text="Based on your mood logging consistency."
+                                            wrapText="true" styleClass="metric-caption" />
+                                    </VBox>
+                                </FlowPane>
+                                <Label fx:id="journalStatus" styleClass="status-label" />
+                                <HBox alignment="CENTER">
+                                    <Button text="SAVE ENTRY" onAction="#handleSaveJournal"
+                                        prefWidth="220" styleClass="primary-button" />
+                                </HBox>
+                            </VBox>
+                        </VBox>
+
+                        <!-- Garden view: plant growth, XP, and weekly care streak -->
+                        <VBox fx:id="gardenView" spacing="16" visible="false" maxWidth="1120">
+                            <styleClass>
+                                <String fx:value="dashboard-page" />
+                                <String fx:value="garden-page" />
+                            </styleClass>
+                            <Label text="MY GARDEN" styleClass="page-title" />
+
+                            <FlowPane fx:id="gardenContentFlow" hgap="20" vgap="16"
+                                prefWrapLength="980" maxWidth="Infinity">
+                                <styleClass>
+                                    <String fx:value="responsive-flow" />
+                                    <String fx:value="garden-content-flow" />
+                                </styleClass>
+                                <VBox fx:id="gardenMainColumn" spacing="14" prefWidth="600"
+                                    minWidth="320" maxWidth="760">
+                                    <StackPane fx:id="plantBackgroundPane" minHeight="320"
+                                        prefHeight="340">
+                                        <styleClass>
+                                            <String fx:value="garden-plant-panel" />
+                                            <String fx:value="card" />
+                                            <String fx:value="card-purple" />
+                                            <String fx:value="card-contrast" />
+                                        </styleClass>
+                                        <ImageView fx:id="gardenPlantImageView" fitWidth="280"
+                                            fitHeight="280" preserveRatio="true" smooth="true" />
+                                        <Button fx:id="wateringCanButton" text="Water Plant&#128167;" onAction="#handleWateringAction" visible="false" managed="false" StackPane.alignment="CENTER_RIGHT" styleClass="secondary-button" />
+                                    </StackPane>
+
+                                    <VBox spacing="8">
+                                        <styleClass>
+                                            <String fx:value="garden-progress-card" />
+                                            <String fx:value="card" />
+                                            <String fx:value="card-cream" />
+                                        </styleClass>
+                                        <HBox alignment="CENTER_LEFT" spacing="10">
+                                            <Label text="Growth Progress"
+                                                style="-fx-font-size: 14px; -fx-font-weight: 700; -fx-text-fill: #6A515E;" />
+                                            <Region HBox.hgrow="ALWAYS" />
+                                            <Label fx:id="gardenXpTextLabel" text="0 / 0 XP"
+                                                style="-fx-font-size: 12px; -fx-font-weight: 700; -fx-text-fill: #592E83;" />
+                                        </HBox>
+                                        <ProgressBar fx:id="gardenProgress" progress="0.0"
+                                            prefWidth="480" maxWidth="Infinity"
+                                            styleClass="custom-progress-bar" />
+                                        <Label fx:id="gardenMaxLabel"
+                                            text="&#127800;  Your garden has reached full bloom! MAX LEVEL  &#127800;"
+                                            visible="false"
+                                            managed="false"
+                                            style="-fx-font-size: 13px; -fx-font-weight: 700; -fx-text-fill: #FFFFFF; -fx-background-color: #7A9E7E; -fx-background-radius: 12; -fx-padding: 8 14;" />
+                                    </VBox>
+                                </VBox>
+
+                                <VBox fx:id="gardenSideColumn" spacing="14" prefWidth="300"
+                                    minWidth="260" maxWidth="340">
+                                    <VBox spacing="12">
+                                        <styleClass>
+                                            <String fx:value="garden-profile-card" />
+                                            <String fx:value="card" />
+                                            <String fx:value="card-cream" />
+                                        </styleClass>
+                                        <Label text="PLANT PROFILE" styleClass="eyebrow" />
+                                        <VBox spacing="4">
+                                            <Label text="Current Stage"
+                                                style="-fx-font-size: 11px; -fx-font-weight: 700; -fx-text-fill: #6A515E;" />
+                                            <Label fx:id="gardenExpLabel" text="Stage 1"
+                                                style="-fx-font-size: 20px; -fx-font-weight: 700; -fx-text-fill: #592E83;" />
+                                        </VBox>
+                                        <VBox spacing="4">
+                                            <Label text="Mood Tendency"
+                                                style="-fx-font-size: 11px; -fx-font-weight: 700; -fx-text-fill: #6A515E;" />
+                                            <Label fx:id="moodTendencyLabel" text="Balanced"
+                                                style="-fx-font-size: 20px; -fx-font-weight: 700; -fx-text-fill: #592E83;" />
+                                        </VBox>
+                                    </VBox>
+
+                                    <VBox spacing="10">
+                                        <styleClass>
+                                            <String fx:value="garden-wisdom-card" />
+                                            <String fx:value="card" />
+                                            <String fx:value="card-sage" />
+                                            <String fx:value="card-contrast" />
+                                        </styleClass>
+                                        <Label text="PLANT WISDOM" styleClass="eyebrow" />
+                                        <Label fx:id="plantWisdomLabel" wrapText="true"
+                                            text="Your garden is waiting to bloom..."
+                                            style="-fx-font-size: 14px; -fx-font-style: italic;" />
+                                    </VBox>
+                                </VBox>
+                            </FlowPane>
+
+                            <VBox spacing="10" minHeight="156">
+                                <styleClass>
+                                    <String fx:value="garden-weekly-card" />
+                                    <String fx:value="card" />
+                                    <String fx:value="card-cream" />
+                                </styleClass>
+                                <Label text="WEEKLY CARE STREAK" styleClass="eyebrow" />
+                                <FlowPane fx:id="weeklyStreakFlow" hgap="15" vgap="10"
+                                    alignment="CENTER_LEFT" prefWrapLength="480"
+                                    styleClass="responsive-flow">
+                                    <VBox alignment="CENTER" spacing="5">
+                                        <StackPane fx:id="day1Pane" prefWidth="46" prefHeight="46"
+                                            styleClass="weekly-dot" />
+                                        <Label text="Mon"
+                                            style="-fx-font-size: 11px; -fx-font-weight: 700; -fx-text-fill: #592E83;" />
+                                    </VBox>
+                                    <VBox alignment="CENTER" spacing="5">
+                                        <StackPane fx:id="day2Pane" prefWidth="46" prefHeight="46"
+                                            styleClass="weekly-dot" />
+                                        <Label text="Tue"
+                                            style="-fx-font-size: 11px; -fx-font-weight: 700; -fx-text-fill: #592E83;" />
+                                    </VBox>
+                                    <VBox alignment="CENTER" spacing="5">
+                                        <StackPane fx:id="day3Pane" prefWidth="46" prefHeight="46"
+                                            styleClass="weekly-dot" />
+                                        <Label text="Wed"
+                                            style="-fx-font-size: 11px; -fx-font-weight: 700; -fx-text-fill: #592E83;" />
+                                    </VBox>
+                                    <VBox alignment="CENTER" spacing="5">
+                                        <StackPane fx:id="day4Pane" prefWidth="46" prefHeight="46"
+                                            styleClass="weekly-dot" />
+                                        <Label text="Thu"
+                                            style="-fx-font-size: 11px; -fx-font-weight: 700; -fx-text-fill: #592E83;" />
+                                    </VBox>
+                                    <VBox alignment="CENTER" spacing="5">
+                                        <StackPane fx:id="day5Pane" prefWidth="46" prefHeight="46"
+                                            styleClass="weekly-dot" />
+                                        <Label text="Fri"
+                                            style="-fx-font-size: 11px; -fx-font-weight: 700; -fx-text-fill: #592E83;" />
+                                    </VBox>
+                                    <VBox alignment="CENTER" spacing="5">
+                                        <StackPane fx:id="day6Pane" prefWidth="46" prefHeight="46"
+                                            styleClass="weekly-dot" />
+                                        <Label text="Sat"
+                                            style="-fx-font-size: 11px; -fx-font-weight: 700; -fx-text-fill: #592E83;" />
+                                    </VBox>
+                                    <VBox alignment="CENTER" spacing="5">
+                                        <StackPane fx:id="day7Pane" prefWidth="46" prefHeight="46"
+                                            styleClass="weekly-dot" />
+                                        <Label text="Sun"
+                                            style="-fx-font-size: 11px; -fx-font-weight: 700; -fx-text-fill: #592E83;" />
+                                    </VBox>
+                                </FlowPane>
+                            </VBox>
+                        </VBox>
+
+                        <!-- History view: mood calendar and recent entries list -->
+                        <VBox fx:id="historyView" spacing="12" visible="false" maxWidth="1120"
+                            styleClass="dashboard-page">
+                            <Label text="TIMELINE" styleClass="page-title" />
+
+                            <VBox spacing="16" VBox.vgrow="ALWAYS">
+                                <styleClass>
+                                    <String fx:value="card" />
+                                    <String fx:value="card-cream" />
+                                </styleClass>
+                                <VBox fx:id="calendarContainer" spacing="14" VBox.vgrow="ALWAYS">
+                                    <HBox alignment="CENTER_LEFT" spacing="15">
+                                        <Label fx:id="calendarMonthYearLabel" text="April 2026"
+                                            style="-fx-font-size: 24px; -fx-font-weight: 700; -fx-text-fill: #592E83;" />
+                                        <Region HBox.hgrow="ALWAYS" />
+                                        <Button text="Recent Entries" onAction="#toggleHistoryView"
+                                            styleClass="secondary-button" />
+                                    </HBox>
+
+                                    <HBox alignment="CENTER">
+                                        <Label text="Mon" HBox.hgrow="ALWAYS" maxWidth="Infinity"
+                                            alignment="CENTER" styleClass="eyebrow" />
+                                        <Label text="Tue" HBox.hgrow="ALWAYS" maxWidth="Infinity"
+                                            alignment="CENTER" styleClass="eyebrow" />
+                                        <Label text="Wed" HBox.hgrow="ALWAYS" maxWidth="Infinity"
+                                            alignment="CENTER" styleClass="eyebrow" />
+                                        <Label text="Thu" HBox.hgrow="ALWAYS" maxWidth="Infinity"
+                                            alignment="CENTER" styleClass="eyebrow" />
+                                        <Label text="Fri" HBox.hgrow="ALWAYS" maxWidth="Infinity"
+                                            alignment="CENTER" styleClass="eyebrow" />
+                                        <Label text="Sat" HBox.hgrow="ALWAYS" maxWidth="Infinity"
+                                            alignment="CENTER" styleClass="eyebrow" />
+                                        <Label text="Sun" HBox.hgrow="ALWAYS" maxWidth="Infinity"
+                                            alignment="CENTER" styleClass="eyebrow" />
+                                    </HBox>
+
+                                    <GridPane fx:id="calendarGrid" hgap="10" vgap="10"
+                                        minHeight="300" VBox.vgrow="ALWAYS">
+                                        <columnConstraints>
+                                            <ColumnConstraints percentWidth="14.28" />
+                                            <ColumnConstraints percentWidth="14.28" />
+                                            <ColumnConstraints percentWidth="14.28" />
+                                            <ColumnConstraints percentWidth="14.28" />
+                                            <ColumnConstraints percentWidth="14.28" />
+                                            <ColumnConstraints percentWidth="14.28" />
+                                            <ColumnConstraints percentWidth="14.28" />
+                                        </columnConstraints>
+                                        <rowConstraints>
+                                            <RowConstraints />
+                                        </rowConstraints>
+                                    </GridPane>
+
+                                    <HBox alignment="CENTER">
+                                        <FlowPane alignment="CENTER" hgap="18" vgap="10">
+                                            <styleClass>
+                                                <String fx:value="history-legend-flow" />
+                                                <String fx:value="card" />
+                                                <String fx:value="card-cream" />
+                                            </styleClass>
+                                            <HBox alignment="CENTER" spacing="8">
+                                                <Region
+                                                    style="-fx-background-color: #D57F7E; -fx-background-radius: 10; -fx-min-width: 12; -fx-min-height: 12; -fx-max-width: 12; -fx-max-height: 12;" />
+                                                <Label text="Awful" styleClass="metric-caption" />
+                                            </HBox>
+                                            <HBox alignment="CENTER" spacing="8">
+                                                <Region
+                                                    style="-fx-background-color: #EEAB7B; -fx-background-radius: 10; -fx-min-width: 12; -fx-min-height: 12; -fx-max-width: 12; -fx-max-height: 12;" />
+                                                <Label text="Bad" styleClass="metric-caption" />
+                                            </HBox>
+                                            <HBox alignment="CENTER" spacing="8">
+                                                <Region
+                                                    style="-fx-background-color: #8FB9DA; -fx-background-radius: 10; -fx-min-width: 12; -fx-min-height: 12; -fx-max-width: 12; -fx-max-height: 12;" />
+                                                <Label text="Okay" styleClass="metric-caption" />
+                                            </HBox>
+                                            <HBox alignment="CENTER" spacing="8">
+                                                <Region
+                                                    style="-fx-background-color: #7FC59B; -fx-background-radius: 10; -fx-min-width: 12; -fx-min-height: 12; -fx-max-width: 12; -fx-max-height: 12;" />
+                                                <Label text="Good" styleClass="metric-caption" />
+                                            </HBox>
+                                            <HBox alignment="CENTER" spacing="8">
+                                                <Region
+                                                    style="-fx-background-color: #E3C44A; -fx-background-radius: 10; -fx-min-width: 12; -fx-min-height: 12; -fx-max-width: 12; -fx-max-height: 12;" />
+                                                <Label text="Great" styleClass="metric-caption" />
+                                            </HBox>
+                                        </FlowPane>
+                                    </HBox>
+
+                                    <FlowPane alignment="CENTER" hgap="14" vgap="10"
+                                        styleClass="history-nav-row">
+                                        <Button text="Previous Month" onAction="#handlePrevMonth"
+                                            styleClass="secondary-button" />
+                                        <Button text="Current Month" onAction="#handleCurrentMonth"
+                                            styleClass="secondary-button" />
+                                        <Button text="Next Month" onAction="#handleNextMonth"
+                                            styleClass="secondary-button" />
+                                    </FlowPane>
+                                </VBox>
+
+                                <VBox fx:id="listContainer" visible="false" managed="false"
+                                    spacing="14">
+                                    <HBox alignment="CENTER_LEFT">
+                                        <Button text="View Calendar" onAction="#toggleHistoryView"
+                                            styleClass="secondary-button" />
+                                    </HBox>
+                                    <ListView fx:id="historyList" VBox.vgrow="ALWAYS" />
+                                </VBox>
+                            </VBox>
+                        </VBox>
+
+                        <!-- Settings view: profile, data controls, and dev tools -->
+                        <VBox fx:id="settingsView" spacing="16" visible="false" maxWidth="900"
+                            styleClass="dashboard-page">
+                            <Label text="SETTINGS" styleClass="page-title" />
+                            <Label text="Manage your Solacea preferences."
+                                styleClass="page-subtitle" />
+
+                            <VBox spacing="15">
+                                <styleClass>
+                                    <String fx:value="card" />
+                                    <String fx:value="card-cream" />
+                                </styleClass>
+                                <Label text="PROFILE &amp; PREFERENCES" styleClass="eyebrow" />
+                                <HBox alignment="CENTER_LEFT" spacing="15">
+                                    <Label text="Display Name"
+                                        style="-fx-font-size: 14px; -fx-font-weight: 700; -fx-text-fill: #592E83;" />
+                                    <Region HBox.hgrow="ALWAYS" />
+                                    <TextField fx:id="displayNameField" promptText="Enter name..."
+                                        prefWidth="240" />
+                                    <Button text="Update" onAction="#handleChangeDisplayName"
+                                        styleClass="primary-button" />
+                                </HBox>
+                            </VBox>
+
+                            <VBox spacing="15">
+                                <styleClass>
+                                    <String fx:value="card" />
+                                    <String fx:value="card-cream" />
+                                </styleClass>
+                                <Label text="ACCOUNT MANAGEMENT" styleClass="eyebrow" />
+                                <VBox spacing="10" styleClass="settings-action-row">
+                                    <Label text="Sign out of your Solacea account securely."
+                                        wrapText="true" maxWidth="Infinity"
+                                        style="-fx-font-size: 14px; -fx-text-fill: #592E83;" />
+                                    <HBox alignment="CENTER_RIGHT">
+                                        <Region HBox.hgrow="ALWAYS" />
+                                        <Button text="LOGOUT" onAction="#handleLogout">
+                                            <styleClass>
+                                                <String fx:value="secondary-button" />
+                                                <String fx:value="settings-action-button" />
+                                            </styleClass>
+                                        </Button>
+                                    </HBox>
+                                </VBox>
+                            </VBox>
+
+                            <VBox spacing="14">
+                                <styleClass>
+                                    <String fx:value="card" />
+                                    <String fx:value="card-cream" />
+                                </styleClass>
+                                <Label text="DATA MANAGEMENT" styleClass="eyebrow" />
+                                <VBox spacing="10" styleClass="settings-action-row">
+                                    <Label
+                                        text="Remove timeline entries while keeping account and garden progression."
+                                        wrapText="true" maxWidth="Infinity"
+                                        style="-fx-font-size: 14px; -fx-text-fill: #592E83;" />
+                                    <HBox alignment="CENTER_RIGHT">
+                                        <Region HBox.hgrow="ALWAYS" />
+                                        <Button text="CLEAR HISTORY" onAction="#handleClearHistoryOnly">
+                                            <styleClass>
+                                                <String fx:value="danger-button" />
+                                                <String fx:value="settings-action-button" />
+                                            </styleClass>
+                                        </Button>
+                                    </HBox>
+                                </VBox>
+                                <VBox spacing="10" styleClass="settings-action-row">
+                                    <Label
+                                        text="Clear calendar moods, notes, and streak logs while preserving XP and garden level."
+                                        wrapText="true" maxWidth="Infinity"
+                                        style="-fx-font-size: 14px; -fx-text-fill: #592E83;" />
+                                    <HBox alignment="CENTER_RIGHT">
+                                        <Region HBox.hgrow="ALWAYS" />
+                                        <Button text="RESET CALENDAR" onAction="#handleResetCalendar">
+                                            <styleClass>
+                                                <String fx:value="danger-button" />
+                                                <String fx:value="settings-action-button" />
+                                            </styleClass>
+                                        </Button>
+                                    </HBox>
+                                </VBox>
+                            </VBox>
+
+                            <VBox spacing="14">
+                                <styleClass>
+                                    <String fx:value="settings-danger" />
+                                    <String fx:value="settings-tools" />
+                                </styleClass>
+                                <Label text="DEVELOPER TOOLS"
+                                    style="-fx-font-size: 12px; -fx-font-weight: 700; -fx-letter-spacing: 1.4px; -fx-text-fill: #B66061;" />
+                                <Label
+                                    text="Use these tools for testing and development account states."
+                                    wrapText="true"
+                                    style="-fx-font-size: 14px; -fx-font-weight: 700; -fx-text-fill: #592E83;" />
+                                <HBox spacing="12" alignment="CENTER_LEFT">
+                                    <Button text="RESET ACCOUNT" onAction="#handleResetAccount"
+                                        styleClass="danger-button" />
+                                    <Button text="LEVEL UP GARDEN" onAction="#handleLevelUpGarden"
+                                        styleClass="secondary-button" />
+                                    <Button text="MAX OUT GARDEN" onAction="#handleMaxOutGarden"
+                                        styleClass="secondary-button" />
+                                    <Region HBox.hgrow="ALWAYS" />
+                                </HBox>
+                            </VBox>
+
+                            <Label fx:id="settingsStatusLabel" wrapText="true"
+                                styleClass="status-label" />
+                        </VBox>
+
+                    </StackPane>
+                </content>
+            </ScrollPane>
+        </StackPane>
+    </center>
+</BorderPane>

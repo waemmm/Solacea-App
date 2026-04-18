@@ -1,0 +1,112 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import java.lang.String?>
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.CheckBox?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.PasswordField?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.image.Image?>
+<?import javafx.scene.image.ImageView?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.Region?>
+<?import javafx.scene.layout.StackPane?>
+<?import javafx.scene.layout.VBox?>
+
+<!-- Login screen root container -->
+<StackPane xmlns="http://javafx.com/javafx"
+           xmlns:fx="http://javafx.com/fxml"
+           fx:controller="com.solacea.controller.LoginController"
+           prefWidth="760"
+           prefHeight="580"
+           styleClass="auth-root"
+           stylesheets="@/css/styles.css">
+
+    <!-- Main split layout: branding panel + login form -->
+    <HBox alignment="CENTER" spacing="44" maxWidth="980" fillHeight="false">
+        <!-- Left panel: logo, tagline, and feature preview cards -->
+        <VBox alignment="CENTER_LEFT" spacing="12" maxWidth="390" minWidth="260" styleClass="auth-left-pane">
+            <ImageView fitWidth="300" preserveRatio="true" smooth="true">
+                <Image url="@/images/Solacea_nlogo.png"/>
+            </ImageView>
+            <Label text="Grow through what you feel.">
+                <styleClass>
+                    <String fx:value="auth-tagline"/>
+                    <String fx:value="auth-tagline-large"/>
+                </styleClass>
+            </Label>
+            <VBox spacing="12" styleClass="auth-showcase-panel">
+                <HBox spacing="12" alignment="CENTER_LEFT" styleClass="auth-showcase-card">
+                    <ImageView fitWidth="98" fitHeight="82" preserveRatio="true" smooth="true">
+                        <Image url="@/images/1_4_Happy.jpg"/>
+                    </ImageView>
+                    <VBox spacing="5" HBox.hgrow="ALWAYS">
+                        <Label text="MOOD BLOOM PREVIEW" styleClass="auth-showcase-title"/>
+                        <Label text="Watch your plant brighten as daily mood check-ins stay steady."
+                               wrapText="true"
+                               styleClass="auth-showcase-text"/>
+                    </VBox>
+                </HBox>
+                <HBox spacing="12" alignment="CENTER_LEFT" styleClass="auth-showcase-card">
+                    <ImageView fitWidth="98" fitHeight="82" preserveRatio="true" smooth="true">
+                        <Image url="@/images/3_2_Sad_Droopy.jpg"/>
+                    </ImageView>
+                    <VBox spacing="5" HBox.hgrow="ALWAYS">
+                        <Label text="RECOVERY SPOTLIGHT" styleClass="auth-showcase-title"/>
+                        <Label text="Gentle journaling and mood logs help your garden recover over time."
+                               wrapText="true"
+                               styleClass="auth-showcase-text"/>
+                    </VBox>
+                </HBox>
+            </VBox>
+        </VBox>
+
+        <!-- Right panel: login card with tabs and form fields -->
+        <VBox alignment="TOP_CENTER" prefWidth="440" maxWidth="440" styleClass="auth-card">
+            <!-- Tab row: switch between Login and Sign Up -->
+            <HBox alignment="CENTER" styleClass="tab-row">
+                <Button text="LOG IN" prefWidth="220" styleClass="tab-button-active"/>
+                <Button text="SIGN UP" onAction="#handleGoToRegister" prefWidth="220" styleClass="tab-button"/>
+            </HBox>
+
+            <!-- Login form body -->
+            <VBox alignment="TOP_CENTER" spacing="16" styleClass="auth-card-body">
+                <VBox spacing="8" fillWidth="true">
+                    <Label text="NAME" styleClass="field-label"/>
+                    <TextField fx:id="usernameField" promptText="Enter your name" onAction="#handleLogin" styleClass="auth-input"/>
+                </VBox>
+
+                <VBox spacing="8" fillWidth="true">
+                    <Label text="PASSWORD" styleClass="field-label"/>
+                    <StackPane>
+                        <PasswordField fx:id="passwordField" promptText="Enter Password" onAction="#handleLogin" styleClass="auth-input"/>
+                        <TextField fx:id="passwordTextField" promptText="Enter Password" onAction="#handleLogin" visible="false" styleClass="auth-input"/>
+                        <Button fx:id="eyeButton"
+                                text="Show"
+                                onAction="#togglePassword"
+                                visible="false"
+                                managed="false"
+                                StackPane.alignment="CENTER_RIGHT"
+                                styleClass="field-toggle-button"/>
+                    </StackPane>
+                </VBox>
+
+                <!-- Remember-me option -->
+                <HBox alignment="CENTER_LEFT">
+                    <CheckBox fx:id="rememberMeCheckbox" text="Keep me logged in" styleClass="auth-checkbox"/>
+                </HBox>
+
+                <Label fx:id="statusLabel" alignment="CENTER" wrapText="true" styleClass="status-label"/>
+
+                <Region prefHeight="2"/>
+
+                <!-- Submit button -->
+                <Button text="LOGIN" onAction="#handleLogin" prefWidth="350" defaultButton="true" styleClass="primary-button"/>
+            </VBox>
+        </VBox>
+    </HBox>
+
+    <padding>
+        <Insets top="32" right="32" bottom="32" left="32"/>
+    </padding>
+</StackPane>
