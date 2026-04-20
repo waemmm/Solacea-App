@@ -1,6 +1,7 @@
 package com.solacea.controller;
 
 import com.solacea.util.DatabaseManager;
+import javafx.application.Platform;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
@@ -10,11 +11,15 @@ import javafx.scene.control.*;
 import javafx.scene.paint.Color;
 import javafx.stage.Stage;
 import java.io.IOException;
+import java.net.URL;
 import java.sql.SQLException;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 public class RegisterController {
     private static final Color STATUS_SUCCESS = Color.web("#7A9E7E");
     private static final Color STATUS_ERROR = Color.web("#D57F7E");
+    private static final Logger LOGGER = Logger.getLogger(RegisterController.class.getName());
 
     private static final int USERNAME_MIN_LENGTH = 3;
     private static final int USERNAME_MAX_LENGTH = 16;
@@ -33,6 +38,11 @@ public class RegisterController {
     @FXML
     // Function: initialize - Sets up password/confirm field syncing and initial toggle state.
     public void initialize() {
+        if (passwordField == null || passwordTextField == null || confirmPasswordField == null || confirmTextField == null) {
+            LOGGER.severe("Register view did not inject required password controls.");
+            return;
+        }
+
         passwordField.setManaged(true);
         passwordTextField.setManaged(false);
         confirmPasswordField.setManaged(true);
@@ -96,9 +106,16 @@ public class RegisterController {
     @FXML
     // Function: handleRegister - Validates form data, creates account, and returns to login when successful.
     protected void handleRegister(ActionEvent event) {
-        String user = usernameField.getText() == null ? "" : usernameField.getText().trim();
-        String pass = passwordField.isVisible() ? passwordField.getText() : passwordTextField.getText();
-        String confirmPass = confirmPasswordField.isVisible() ? confirmPasswordField.getText() : confirmTextField.getText();
+        String user = usernameField != null && usernameField.getText() != null ? usernameField.getText().trim() : "";
+        String pass = passwordField != null && passwordField.isVisible()
+                ? passwordField.getText()
+                : (passwordTextField != null ? passwordTextField.getText() : "");
+        String confirmPass = confirmPasswordField != null && confirmPasswordField.isVisible()
+                ? confirmPasswordField.getText()
+                : (confirmTextField != null ? confirmTextField.getText() : "");
+
+        if (pass == null) pass = "";
+        if (confirmPass == null) confirmPass = "";
 
         if (user.isEmpty() || pass.isEmpty() || confirmPass.isEmpty()) {
             showError("Please fill all fields.");
@@ -137,14 +154,17 @@ public class RegisterController {
                     handleBackToLogin(event);
                 } catch (IOException e) {
                     showError("Account created, but failed to open login page.");
-                    e.printStackTrace();
+                    LOGGER.log(Level.WARNING, "Registration succeeded but login view failed to open.", e);
+                } catch (IllegalStateException e) {
+                    showError("Account created, but app window is not ready.");
+                    LOGGER.log(Level.WARNING, "Registration succeeded but stage state is invalid.", e);
                 }
             } else {
                 showError("Username already exists.");
             }
         } catch (SQLException e) {
             showError("Database Error. Try again.");
-            e.printStackTrace();
+            LOGGER.log(Level.WARNING, "Database error during registration.", e);
         }
     }
 
@@ -160,15 +180,44 @@ public class RegisterController {
 
     // Function: showStatus - Writes status text and color to the register status label.
     private void showStatus(String message, Color color) {
-        statusLabel.setText(message);
-        statusLabel.setTextFill(color);
+        if (statusLabel == null) {
+            LOGGER.warning("Status label is missing; cannot show register status.");
+            return;
+        }
+
+        Runnable applyStatus = () -> {
+            statusLabel.setText(message);
+            statusLabel.setTextFill(color);
+        };
+
+        if (Platform.isFxApplicationThread()) {
+            applyStatus.run();
+        } else {
+            Platform.runLater(applyStatus);
+        }
     }
 
     @FXML
     // Function: handleBackToLogin - Navigates from register screen back to login screen.
     protected void handleBackToLogin(ActionEvent event) throws IOException {
-        Parent root = FXMLLoader.load(getClass().getResource("/fxml/login-view.fxml"));
-        Stage stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
+        if (event == null || !(event.getSource() instanceof Node sourceNode)) {
+            throw new IllegalStateException("Cannot open login view: event source is missing.");
+        }
+
+        URL fxmlUrl = getClass().getResource("/fxml/login-view.fxml");
+        if (fxmlUrl == null) {
+            throw new IOException("FXML not found: /fxml/login-view.fxml");
+        }
+
+        if (sourceNode.getScene() == null || sourceNode.getScene().getWindow() == null) {
+            throw new IllegalStateException("Cannot open login view: stage is not initialized.");
+        }
+
+        Parent root = FXMLLoader.load(fxmlUrl);
+        Stage stage = (Stage) sourceNode.getScene().getWindow();
+        if (stage.getScene() == null) {
+            throw new IllegalStateException("Cannot open login view: stage has no scene.");
+        }
         stage.getScene().setRoot(root);
     }
 

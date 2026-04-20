@@ -22,10 +22,13 @@ import java.time.*;
 import java.time.format.*;
 import java.sql.*;
 import java.util.*;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 public class DashboardController {
     private static final Color STATUS_SUCCESS = Color.web("#7A9E7E");
     private static final Color STATUS_ERROR = Color.web("#D57F7E");
+    private static final Logger LOGGER = Logger.getLogger(DashboardController.class.getName());
 
     @FXML private VBox wellbeingAlertBanner;
     @FXML private Button homeBtn, logMoodBtn, journalBtn, gardenBtn, historyBtn, settingsBtn;
@@ -165,7 +168,11 @@ public class DashboardController {
                         // Light Lilac borders, Cream background, Deep Purple text
                         setStyle("-fx-text-fill: #592E83; -fx-background-color: #FAF8F0; -fx-border-color: #C1AEDB; -fx-border-width: 0 0 1 0; -fx-padding: 10; -fx-font-weight: bold;");
                         int score = 5;
-                        try { score = Integer.parseInt(item.split("\\|")[0].replace("Intensity:", "").trim()); } catch (Exception e) {}
+                        try {
+                            score = Integer.parseInt(item.split("\\|")[0].replace("Intensity:", "").trim());
+                        } catch (NumberFormatException e) {
+                            LOGGER.log(Level.FINE, "Invalid mood history item format: " + item, e);
+                        }
                         Image faceImg = getFaceImage(score);
                         if (faceImg != null) {
                             imageView.setImage(faceImg); imageView.setFitHeight(30); imageView.setFitWidth(30);
@@ -355,11 +362,12 @@ public class DashboardController {
         else if (score <= 8) faceFile = "Good.png";
         else faceFile = "Great.png";
 
-        try {
-            java.io.InputStream stream = getClass().getResourceAsStream("/images/" + faceFile);
-            if (stream != null) return new Image(stream);
+        try (java.io.InputStream stream = getClass().getResourceAsStream("/images/" + faceFile)) {
+            if (stream != null) {
+                return new Image(stream);
+            }
         } catch (Exception e) {
-            System.err.println("Could not load image: " + faceFile);
+            LOGGER.log(Level.WARNING, "Could not load mood face image: " + faceFile, e);
         }
         return null;
     }
@@ -444,9 +452,17 @@ public class DashboardController {
             listContainer.setManaged(isCalendarVisible);
 
             if (isCalendarVisible && historyList != null) {
+                String user = UserSession.getUser();
+                if (user == null) {
+                    showTemporaryStatus(settingsStatusLabel, "No active user session.", STATUS_ERROR, "settings");
+                    return;
+                }
                 try {
-                    historyList.getItems().setAll(DatabaseManager.getHistory(UserSession.getUser()));
-                } catch (SQLException e) { }
+                    historyList.getItems().setAll(DatabaseManager.getHistory(user));
+                } catch (SQLException e) {
+                    LOGGER.log(Level.WARNING, "Failed to load history list.", e);
+                    showFallbackErrorStatus("Could not load history right now.");
+                }
             }
         }
     }
@@ -454,9 +470,20 @@ public class DashboardController {
     @FXML
     // Function: handleChangeDisplayName - Saves a new display name and refreshes welcome text.
     private void handleChangeDisplayName() {
-        String newName = displayNameField.getText().trim();
+        if (displayNameField == null) {
+            LOGGER.warning("Display name field is missing.");
+            return;
+        }
+
+        String user = UserSession.getUser();
+        if (user == null) {
+            showTemporaryStatus(settingsStatusLabel, "No active user session.", STATUS_ERROR, "settings");
+            return;
+        }
+
+        String newName = displayNameField.getText() == null ? "" : displayNameField.getText().trim();
         if (!newName.isEmpty() && newName.length() <= 30) {
-            prefs.put(UserSession.getUser() + "_display_name", newName);
+            prefs.put(user + "_display_name", newName);
             refreshHomeData();
             showTemporaryStatus(settingsStatusLabel, "Display name successfully updated!", Color.web("#8DB084"), "settings");
             displayNameField.clear();
@@ -477,6 +504,10 @@ public class DashboardController {
         if (!confirmed) return;
 
         String user = UserSession.getUser();
+        if (user == null) {
+            showTemporaryStatus(settingsStatusLabel, "No active user session.", STATUS_ERROR, "settings");
+            return;
+        }
         prefs.put(user + "_history_cleared_at", LocalDate.now().toString());
 
         if (historyList != null) historyList.getItems().clear();
@@ -548,6 +579,7 @@ public class DashboardController {
                 prefs.putInt(user + "_true_xp", dbXp);
                 return dbXp;
             } catch (SQLException e) {
+                LOGGER.log(Level.WARNING, "Failed to compute XP for user: " + user, e);
                 return 0;
             }
         }
@@ -581,6 +613,10 @@ public class DashboardController {
 
         try {
             String user = UserSession.getUser();
+            if (user == null) {
+                showTemporaryStatus(settingsStatusLabel, "No active user session.", STATUS_ERROR, "settings");
+                return;
+            }
             DatabaseManager.temporaryResetAccount(user);
 
             prefs.put(user + "_join_date", LocalDate.now().toString());
@@ -598,6 +634,7 @@ public class DashboardController {
             showTemporaryStatus(settingsStatusLabel, "Account reset successfully. Your garden has been cleared.", Color.web("#8DB084"), "settings");
         } catch (SQLException e) {
             showTemporaryStatus(settingsStatusLabel, "Error: Could not reset account.", Color.web("#D57F7E"), "settings");
+            LOGGER.log(Level.WARNING, "Failed to reset account.", e);
         }
     }
 
@@ -656,6 +693,10 @@ public class DashboardController {
     private void handleMaxOutGarden() {
         try {
             String user = UserSession.getUser();
+            if (user == null) {
+                showTemporaryStatus(settingsStatusLabel, "No active user session.", STATUS_ERROR, "settings");
+                return;
+            }
             for (int i = 0; i < 80; i++) {
                 DatabaseManager.saveJournal(user, "DEV TOOL", "Auto-generated for max level testing.");
             }
@@ -666,7 +707,7 @@ public class DashboardController {
             showTemporaryStatus(settingsStatusLabel, "\u2713 Garden forcefully maxed out! (80 XP Added)", Color.web("#8DB084"), "settings");
         } catch (SQLException e) {
             showTemporaryStatus(settingsStatusLabel, "Error maxing out garden.", Color.web("#D57F7E"), "settings");
-            System.err.println("Dev tool error: " + e.getMessage());
+            LOGGER.log(Level.WARNING, "Failed to max out garden with dev action.", e);
         }
     }
 
@@ -706,6 +747,16 @@ public class DashboardController {
     // Function: handleSaveEntry - Saves a mood log entry, applies rewards, and refreshes related widgets.
     @FXML private void handleSaveEntry() {
         String user = UserSession.getUser();
+        if (user == null) {
+            showTemporaryStatus(dashboardStatusLabel, "No active user session.", STATUS_ERROR, "mood");
+            return;
+        }
+
+        if (intensitySlider == null || notesArea == null) {
+            LOGGER.severe("Mood entry controls were not initialized.");
+            showTemporaryStatus(dashboardStatusLabel, "Mood form is unavailable. Please restart the app.", STATUS_ERROR, "mood");
+            return;
+        }
 
         if (triggerComboBox == null || triggerComboBox.getValue() == null) {
             showTemporaryStatus(dashboardStatusLabel, "Please select what triggered this feeling.", Color.web("#D57F7E"), "mood");
@@ -739,6 +790,7 @@ public class DashboardController {
             }
         } catch (SQLException e) {
             showTemporaryStatus(dashboardStatusLabel, "Database error saving mood.", Color.web("#D57F7E"), "mood");
+            LOGGER.log(Level.WARNING, "Failed to save mood entry for user: " + user, e);
         }
     }
 
@@ -830,7 +882,13 @@ public class DashboardController {
         }
         try {
             String user = UserSession.getUser();
-            DatabaseManager.saveJournal(user, journalPromptLabel.getText(), journalArea.getText());
+            if (user == null) {
+                showTemporaryStatus(journalStatus, "No active user session.", STATUS_ERROR, "journal");
+                return;
+            }
+
+            String prompt = journalPromptLabel.getText() == null ? "" : journalPromptLabel.getText();
+            DatabaseManager.saveJournal(user, prompt, journalArea.getText());
 
             boolean gotXp = awardDailyXP(user, "journal");
             String msg = gotXp ? "Journal saved! (+1 XP) Your garden is growing. \uD83C\uDF31" : "Journal saved! (Daily Journal XP cap reached).";
@@ -843,6 +901,7 @@ public class DashboardController {
             updateGardenUI();
         } catch (SQLException e) {
             showTemporaryStatus(journalStatus, "Error saving journal.", Color.web("#D57F7E"), "journal");
+            LOGGER.log(Level.WARNING, "Failed to save journal entry.", e);
         }
     }
 
@@ -870,7 +929,14 @@ public class DashboardController {
         int row = 0; int col = dayOfWeek - 1; String user = UserSession.getUser();
         if (user == null) return;
         String clearDateStr = prefs.get(user + "_history_cleared_at", "2000-01-01");
-        LocalDate historyClearedDate = LocalDate.parse(clearDateStr);
+        LocalDate historyClearedDate;
+        try {
+            historyClearedDate = LocalDate.parse(clearDateStr);
+        } catch (DateTimeException e) {
+            historyClearedDate = LocalDate.of(2000, 1, 1);
+            prefs.put(user + "_history_cleared_at", historyClearedDate.toString());
+            LOGGER.log(Level.WARNING, "Invalid history clear date in preferences for user: " + user, e);
+        }
 
         for (int i = 0; i < col; i++) {
             Region emptyRegion = new Region(); emptyRegion.setStyle("-fx-background-color: transparent;");
@@ -1241,7 +1307,10 @@ public class DashboardController {
                 homeStreakCountLabel.setText(String.valueOf(currentStreak));
             }
 
-        } catch (SQLException e) { e.printStackTrace(); }
+        } catch (SQLException e) {
+            LOGGER.log(Level.WARNING, "Failed to refresh home data for user: " + user, e);
+            showFallbackErrorStatus("Could not refresh dashboard data.");
+        }
     }
 
     // Function: calculateConsecutiveLoggedDays - Counts the current streak of consecutive logged days.
@@ -1370,7 +1439,8 @@ public class DashboardController {
             loadPlantImage(imageName);
 
         } catch (SQLException e) {
-            System.err.println("Error updating garden UI: " + e.getMessage());
+            LOGGER.log(Level.WARNING, "Failed to refresh garden UI.", e);
+            showFallbackErrorStatus("Could not refresh garden data.");
         }
     }
 
@@ -1379,10 +1449,18 @@ public class DashboardController {
         StackPane[] days = {day1Pane, day2Pane, day3Pane, day4Pane, day5Pane, day6Pane, day7Pane};
         if (days[0] == null) return;
         String user = UserSession.getUser(); LocalDate today = LocalDate.now();
+        if (user == null) return;
         LocalDate startOfWeek = today.with(java.time.temporal.TemporalAdjusters.previousOrSame(java.time.DayOfWeek.MONDAY));
         String joinDateStr = prefs.get(user + "_join_date", null);
         if (joinDateStr == null) { joinDateStr = today.toString(); prefs.put(user + "_join_date", joinDateStr); }
-        LocalDate joinDate = LocalDate.parse(joinDateStr);
+        LocalDate joinDate;
+        try {
+            joinDate = LocalDate.parse(joinDateStr);
+        } catch (DateTimeException e) {
+            joinDate = today;
+            prefs.put(user + "_join_date", today.toString());
+            LOGGER.log(Level.WARNING, "Invalid join date in preferences for user: " + user, e);
+        }
 
         for (int i = 0; i < 7; i++) {
             LocalDate date = startOfWeek.plusDays(i);
@@ -1423,7 +1501,8 @@ public class DashboardController {
 
     // Function: showTemporaryStatus - Shows a status message briefly, then clears it automatically.
     private void showTemporaryStatus(Label label, String text, Color color, String type) {
-        if (label != null) {
+        if (label == null) return;
+        Runnable applyStatus = () -> {
             label.setText(text);
             label.setTextFill(resolveStatusColor(color));
             PauseTransition pause = new PauseTransition(Duration.seconds(3));
@@ -1431,6 +1510,27 @@ public class DashboardController {
             if ("mood".equals(type)) { if (moodTransition != null) moodTransition.stop(); moodTransition = pause; moodTransition.play(); }
             else if ("journal".equals(type)) { if (journalTransition != null) journalTransition.stop(); journalTransition = pause; journalTransition.play(); }
             else if ("settings".equals(type)) { if (settingsTransition != null) settingsTransition.stop(); settingsTransition = pause; settingsTransition.play(); }
+        };
+
+        if (Platform.isFxApplicationThread()) {
+            applyStatus.run();
+        } else {
+            Platform.runLater(applyStatus);
+        }
+    }
+
+    // Function: showFallbackErrorStatus - Shows an error in whichever status label is currently available.
+    private void showFallbackErrorStatus(String message) {
+        if (dashboardStatusLabel != null) {
+            showTemporaryStatus(dashboardStatusLabel, message, STATUS_ERROR, "mood");
+            return;
+        }
+        if (journalStatus != null) {
+            showTemporaryStatus(journalStatus, message, STATUS_ERROR, "journal");
+            return;
+        }
+        if (settingsStatusLabel != null) {
+            showTemporaryStatus(settingsStatusLabel, message, STATUS_ERROR, "settings");
         }
     }
 
@@ -1444,15 +1544,22 @@ public class DashboardController {
         if (gardenPlantImageView == null) return;
         try {
             String path = "/images/" + imageName;
-            java.io.InputStream stream = getClass().getResourceAsStream(path);
-            if (stream != null) {
-                gardenPlantImageView.setImage(new Image(stream));
-            } else {
-                java.io.InputStream fallback = getClass().getResourceAsStream("/images/0_0_None.jpg");
-                if (fallback != null) gardenPlantImageView.setImage(new Image(fallback));
+            try (java.io.InputStream stream = getClass().getResourceAsStream(path)) {
+                if (stream != null) {
+                    gardenPlantImageView.setImage(new Image(stream));
+                    return;
+                }
+            }
+
+            try (java.io.InputStream fallback = getClass().getResourceAsStream("/images/0_0_None.jpg")) {
+                if (fallback != null) {
+                    gardenPlantImageView.setImage(new Image(fallback));
+                } else {
+                    LOGGER.warning("Fallback plant image is missing: /images/0_0_None.jpg");
+                }
             }
         } catch (Exception e) {
-            System.err.println("Error loading image: " + e.getMessage());
+            LOGGER.log(Level.WARNING, "Error loading plant image: " + imageName, e);
         }
     }
 
@@ -1522,12 +1629,28 @@ public class DashboardController {
             UserSession.cleanUserSession();
             java.util.prefs.Preferences.userRoot().node("com.solacea").remove("savedUsername");
 
-            javafx.scene.Parent root = javafx.fxml.FXMLLoader.load(getClass().getResource("/fxml/login-view.fxml"));
-            javafx.stage.Stage stage = (javafx.stage.Stage) ((javafx.scene.Node) event.getSource()).getScene().getWindow();
+            if (event == null || !(event.getSource() instanceof javafx.scene.Node sourceNode)) {
+                throw new IllegalStateException("Cannot logout: event source is missing.");
+            }
+            if (sourceNode.getScene() == null || sourceNode.getScene().getWindow() == null) {
+                throw new IllegalStateException("Cannot logout: stage is not initialized.");
+            }
+
+            java.net.URL loginViewUrl = getClass().getResource("/fxml/login-view.fxml");
+            if (loginViewUrl == null) {
+                throw new java.io.IOException("FXML not found: /fxml/login-view.fxml");
+            }
+
+            javafx.scene.Parent root = javafx.fxml.FXMLLoader.load(loginViewUrl);
+            javafx.stage.Stage stage = (javafx.stage.Stage) sourceNode.getScene().getWindow();
+            if (stage.getScene() == null) {
+                throw new IllegalStateException("Cannot logout: stage has no scene.");
+            }
             stage.getScene().setRoot(root);
 
-        } catch (java.io.IOException e) {
-            e.printStackTrace();
+        } catch (java.io.IOException | IllegalStateException e) {
+            LOGGER.log(Level.SEVERE, "Failed to logout and return to login view.", e);
+            showTemporaryStatus(settingsStatusLabel, "Could not return to login screen.", STATUS_ERROR, "settings");
         }
     }
 
@@ -1548,6 +1671,3 @@ public class DashboardController {
         }
     }
 }
-
-
-

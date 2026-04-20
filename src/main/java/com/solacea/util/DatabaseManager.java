@@ -16,10 +16,13 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Properties;
 import java.util.Set;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 public class DatabaseManager {
     private enum DbMode { MYSQL, SQLITE, AUTO }
     private enum DbBackend { MYSQL, SQLITE }
+    private static final Logger LOGGER = Logger.getLogger(DatabaseManager.class.getName());
 
     private static final String MYSQL_URL = readConfig(
         "SOLACEA_MYSQL_URL",
@@ -265,7 +268,7 @@ public class DatabaseManager {
                     return;
                 } catch (SQLException e) {
                     lastError = e;
-                    System.err.println("Database backend " + backend + " is not available: " + e.getMessage());
+                    LOGGER.log(Level.WARNING, "Database backend " + backend + " is not available.", e);
                 }
             }
 
@@ -288,7 +291,7 @@ public class DatabaseManager {
         synchronized (INIT_LOCK) {
             if (activeBackend == DbBackend.SQLITE) return;
 
-            System.err.println("MySQL connection failed. Switching to SQLite fallback. Cause: " + mysqlFailure.getMessage());
+            LOGGER.log(Level.WARNING, "MySQL connection failed. Switching to SQLite fallback.", mysqlFailure);
             initializeBackend(DbBackend.SQLITE);
             activeBackend = DbBackend.SQLITE;
             backendAnnounced = false;
@@ -328,8 +331,15 @@ public class DatabaseManager {
         Connection conn = DriverManager.getConnection(SQLITE_URL);
         try (Statement stmt = conn.createStatement()) {
             stmt.execute("PRAGMA foreign_keys = ON");
+            return conn;
+        } catch (SQLException e) {
+            try {
+                conn.close();
+            } catch (SQLException closeError) {
+                e.addSuppressed(closeError);
+            }
+            throw e;
         }
-        return conn;
     }
 
     // Function: applySchema - Executes schema statements for the active backend.
@@ -436,7 +446,8 @@ public class DatabaseManager {
         try {
             int value = Integer.parseInt(raw);
             return value > 0 ? value : defaultValue;
-        } catch (NumberFormatException ignored) {
+        } catch (NumberFormatException e) {
+            LOGGER.log(Level.FINE, "Invalid integer config for " + propertyName + ": " + raw, e);
             return defaultValue;
         }
     }
@@ -453,9 +464,9 @@ public class DatabaseManager {
         if (backendAnnounced) return;
         backendAnnounced = true;
         if (activeBackend == DbBackend.SQLITE) {
-            System.err.println("Solacea database backend: SQLITE (" + SQLITE_PATH.toAbsolutePath().normalize() + ")");
+            LOGGER.info("Solacea database backend: SQLITE (" + SQLITE_PATH.toAbsolutePath().normalize() + ")");
         } else {
-            System.err.println("Solacea database backend: MYSQL (" + MYSQL_URL + ")");
+            LOGGER.info("Solacea database backend: MYSQL (" + MYSQL_URL + ")");
         }
     }
 }
